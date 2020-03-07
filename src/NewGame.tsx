@@ -1,6 +1,6 @@
 import * as firebase from 'firebase/app';
 import 'firebase/firestore';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, Col, Button } from 'react-bootstrap';
 
 import './NewGame.css';
@@ -21,6 +21,23 @@ export default function NewGame(props: NewGameProps) {
   const [teamSize, setTeamSize] = useState(3);
   const [opponent, setOpponent] = useState("All Star");
   const [teamMembers, setTeamMembers] = useState(['Carl', 'Michael']);
+
+  useEffect(() => {
+    gamesRef
+        .withConverter(GameConverter)
+        .orderBy('gameTime', 'desc')
+        .where('deleted', '==', false)
+        .limit(1)
+        .get().then(snap => {
+          console.log('Got results', snap.docs);
+          if (snap.docs.length > 0) {
+            const lastGame = snap.docs[0].data();
+            setTeamSize(lastGame.teamSize);
+            setOpponent(lastGame.opponent);
+            setTeamMembers(lastGame.teamMembers);
+          }
+    });
+  }, [gamesRef]);
 
   function recordGame(win: boolean) {
     const gameTime = calcGameTime(gameDate);

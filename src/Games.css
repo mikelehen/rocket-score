@@ -6,3 +6,23 @@
   color: #dc3545;
   text-decoration: none;
 }
+
+.Games-row-loss {
+  background-color: #fff0f0;
+}
+
+.Games-row-win {
+  background-color: #f0fff0;
+}
+
+.Games-group {
+  margin-top: 2rem;
+}
+
+.Games-group table {
+  width: auto !important;
+}
+
+.Games-group-heading {
+  border-bottom: 1px solid #e0e0e0;
+}

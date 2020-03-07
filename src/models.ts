@@ -1,5 +1,6 @@
 import * as firebase from 'firebase/app';
 import 'firebase/firestore';
+import { scalarArrayEquals, assert } from './util';
 
 export interface Game {
   gameTime: firebase.firestore.Timestamp,
@@ -37,3 +38,62 @@ export const GameConverter = {
   }
 }
 
+/** A group of related games (same time period and players, etc.) */
+export class GameGroup {
+  private readonly HOURS_BETWEEN_GROUPS = 1;
+
+  readonly firstGame: Date;
+  readonly teamSize: number;
+  readonly opponent: string;
+  readonly teamMembers: string[];
+  readonly key: string;
+  lastGame: Date;
+  games: Game[];
+
+  constructor(game: Game) {
+    this.firstGame = game.gameTime.toDate();
+    this.lastGame = game.gameTime.toDate();
+    this.teamSize = game.teamSize;
+    this.opponent = game.opponent;
+    this.teamMembers = game.teamMembers;
+    this.key = `${this.firstGame}:${this.teamSize}:${this.opponent}:${this.teamMembers.join(',')}`;
+
+    this.games = [game];
+  }
+
+  tryAddGame(game: Game): boolean {
+    const gameTime = game.gameTime.toDate();
+    assert(gameTime >= this.lastGame, 'Games must be added in gameTime-order.');
+    let gameGroupEndTime = this.lastGame;
+    gameGroupEndTime.setHours(gameGroupEndTime.getHours() + this.HOURS_BETWEEN_GROUPS);
+    if (gameTime <= gameGroupEndTime &&
+        game.teamSize === this.teamSize &&
+        game.opponent === this.opponent &&
+        scalarArrayEquals(game.teamMembers.sort(), this.teamMembers.sort())) {
+      this.games.unshift(game);
+      this.lastGame = gameTime;
+      return true;
+    } else {
+      return false;
+    }
+  }
+}
+
+export function calcGameGroups(games: Game[]): GameGroup[] {
+  let groups = [] as GameGroup[];
+  // Games are expected to be in reverse-chronological order, but group.tryAddGame() requires
+  // they be added chronologically.
+  for (let i = games.length - 1; i >=0; i--) {
+    const game = games[i];
+    if (groups.length === 0) {
+      groups.push(new GameGroup(game));
+    } else {
+      const lastGroup = groups[groups.length - 1];
+      if (!lastGroup.tryAddGame(game)) {
+        groups.push(new GameGroup(game));
+      }
+    }
+  }
+  // We want to return the groups in reverse-chronological order again.
+  return groups.reverse();
+}
