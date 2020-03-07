@@ -69,7 +69,7 @@ export default function Games(props: GamesProps) {
                     (<span role='img' aria-label='Loss'>&#x1f62d;</span>)
                   }
                   </td>
-                  <td>{game.gameTime.toDate().toLocaleTimeString()}</td>
+                  <td>{game.gameTime.toDate().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</td>
                   <td><Button variant="link" className="Games-delete" size="sm" onClick={()=>setDeletingID(game.id!)}><span className="icon-bin2"></span></Button></td>
                 </tr>
               ))}
