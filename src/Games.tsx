@@ -2,6 +2,9 @@ import './Games.css';
 import './font.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
+import * as firebase from 'firebase/app';
+import 'firebase/firestore';
+
 import React, { useEffect, useState } from 'react';
 import { Table, Button } from 'react-bootstrap';
 
@@ -30,7 +33,10 @@ export default function Games(props: GamesProps) {
   }, [gamesRef]);
 
   function deleteGame(id: string) {
-    gamesRef.doc(id).update('deleted', true);
+    gamesRef.doc(id).update({
+      'deleted': true,
+      'lastUpdated': firebase.firestore.FieldValue.serverTimestamp()
+    });
   }
 
   return (

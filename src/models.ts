@@ -8,6 +8,7 @@ export interface Game {
   teamMembers: string[],
   win: boolean,
   createdAt?: firebase.firestore.Timestamp,
+  lastUpdated?: firebase.firestore.Timestamp,
   deleted?: boolean
   id?: string
 }
@@ -17,6 +18,7 @@ export const GameConverter = {
     // Don't persist id to Firestore.
     const {id, ...rest} = game;
     const data = rest as firebase.firestore.DocumentData;
+    data.lastUpdated = firebase.firestore.FieldValue.serverTimestamp();
     if (data.createdAt === undefined) {
       data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
     }
