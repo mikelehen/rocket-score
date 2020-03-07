@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Form, Col, Button } from 'react-bootstrap';
 
 import './NewGame.css';
-import { GameConverter, Game } from './models';
+import { GameConverter } from './models';
 import { formatDate } from './util';
 
 const TEAM_SIZES = [2, 3, 4];
@@ -24,13 +24,13 @@ export default function NewGame(props: NewGameProps) {
 
   function recordGame(win: boolean) {
     const gameTime = calcGameTime(gameDate);
-    gamesRef.withConverter(GameConverter).add(new Game(
-      firebase.firestore.Timestamp.fromDate(gameTime),
+    gamesRef.withConverter(GameConverter).add({
+      gameTime: firebase.firestore.Timestamp.fromDate(gameTime),
       teamSize,
       opponent,
       teamMembers,
       win
-    )).then(() => {
+    }).then(() => {
       console.log('Game recorded.');
     }).catch(e => console.error(e));
   }

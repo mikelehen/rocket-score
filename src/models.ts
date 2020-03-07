@@ -1,30 +1,37 @@
-export class Game {
-  constructor(
-    readonly gameTime: firebase.firestore.Timestamp,
-    readonly teamSize: number,
-    readonly opponent: string,
-    readonly teamMembers: string[],
-    readonly win: boolean,
-    readonly id?: string
-  ) { };
-};
+import * as firebase from 'firebase/app';
+import 'firebase/firestore';
+
+export interface Game {
+  gameTime: firebase.firestore.Timestamp,
+  teamSize: number,
+  opponent: string,
+  teamMembers: string[],
+  win: boolean,
+  createdAt?: firebase.firestore.Timestamp,
+  deleted?: boolean
+  id?: string
+}
 
 export const GameConverter = {
   toFirestore(game: Game): firebase.firestore.DocumentData {
-    return {
-      gameTime: game.gameTime,
-      teamSize: game.teamSize,
-      opponent: game.opponent,
-      teamMembers: game.teamMembers,
-      win: game.win
-    };
+    // Don't persist id to Firestore.
+    const {id, ...rest} = game;
+    const data = rest as firebase.firestore.DocumentData;
+    if (data.createdAt === undefined) {
+      data.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    }
+    if (data.deleted === undefined) {
+      data.deleted = false;
+    }
+    return rest;
   },
 
   fromFirestore(
       snapshot: firebase.firestore.QueryDocumentSnapshot,
       options: firebase.firestore.SnapshotOptions): Game {
     const data = snapshot.data(options);
-    return new Game(data.gameTime, data.teamSize, data.opponent, data.teamMembers, data.win, snapshot.id);
+    data['id'] = snapshot.id;
+    return data as Game;
   }
 }
 

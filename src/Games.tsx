@@ -18,14 +18,19 @@ export default function Games(props: GamesProps) {
   const [games, setGames] = useState([] as Game[]);
 
   useEffect(() => {
-    const listener = gamesRef.withConverter(GameConverter).orderBy('gameTime', 'desc').limit(50).onSnapshot(snapshot => {
+    const listener =
+        gamesRef
+          .withConverter(GameConverter)
+          .where('deleted', '==', false)
+          .orderBy('gameTime', 'desc')
+          .limit(50).onSnapshot(snapshot => {
       setGames(snapshot.docs.map(docSnap => docSnap.data()));
     });
     return listener;
   }, [gamesRef]);
 
   function deleteGame(id: string) {
-    gamesRef.doc(id).delete();
+    gamesRef.doc(id).update('deleted', true);
   }
 
   return (
