@@ -1,0 +1,8 @@
+.Games-delete, .Games-delete:active {
+  color: #c82333;
+}
+
+.Games-delete:hover {
+  color: #dc3545;
+  text-decoration: none;
+}

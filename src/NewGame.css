@@ -1,0 +1,10 @@
+.NewGame-Form {
+  margin-top: 1rem;
+  border: 1px solid lightgray;
+  border-radius: 1rem;
+  padding: 1rem;
+}
+
+.NewGame-Form .form-label {
+  font-weight: bold;
+}
