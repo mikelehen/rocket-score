@@ -1,7 +1,8 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import firebase from 'firebase/app';
+import 'firebase/auth';
 import 'firebase/firestore';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 import './App.css';
 import Games from './Games';
@@ -13,6 +14,7 @@ import {
 } from 'react-router-dom';
 import { LinkContainer } from 'react-router-bootstrap';
 import { Navbar, Nav} from 'react-bootstrap';
+import Login from './Login';
 
 // Your web app's Firebase configuration
 var firebaseConfig = {
@@ -27,8 +29,18 @@ var firebaseConfig = {
 };
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
+firebase.firestore().enablePersistence();
 
 export default function App() {
+  const [user, setUser] = useState<firebase.User|null|undefined>(undefined);
+  const auth = firebase.auth();
+  useEffect(() => {
+    const listener = firebase.auth().onAuthStateChanged(u => {
+      setUser(u);
+    });
+    return listener;
+  }, [auth]);
+
   return (
     <Router>
       <div className="App container-md">
@@ -39,15 +51,39 @@ export default function App() {
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="mr-auto">
+              <LoginLogoutButton user={user}/>
             </Nav>
           </Navbar.Collapse>
         </Navbar>
         <Switch>
-          <Route path="/">
-            <Games gamesRef={firebase.firestore().collection('games')}></Games>
+          <Route path="/" exact>
+            { (user === undefined) ? null :
+              (user === null) ? (
+              <Login />
+            ) : (
+              <Games gamesRef={firebase.firestore().collection('games')}></Games>
+            )}
           </Route>
         </Switch>
       </div>
     </Router>
   );
+}
+
+function LoginLogoutButton(props: { user: firebase.User|null|undefined }) {
+  function logout() {
+    firebase.auth().signOut();
+  }
+
+  if (!props.user) {
+    return (
+      <LinkContainer to="/">
+        <Nav.Link>Login</Nav.Link>
+      </LinkContainer>
+    );
+  } else {
+    return (
+      <Nav.Link onClick={logout}>Logout</Nav.Link>
+    );
+  }
 }
