@@ -60,7 +60,7 @@ export default function Games(props: GamesProps) {
             {group.firstGame.toLocaleDateString()}: <em>{group.teamMembers.join(', ')}</em> vs <em>{group.opponent}</em> ({group.teamSize}v{group.teamSize})
           </h4>
           Record: {calcRecord(group.games)}
-          <Table borderless>
+          <Table>
             <tbody>
               {group.games.map(game => (
                 <tr key={game.id} className={game.win ? 'Games-row-win' : 'Games-row-loss' }>
