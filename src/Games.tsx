@@ -71,7 +71,7 @@ export default function Games(props: GamesProps) {
       ))}
       {hitLimit && (
         <div className="Games-loadall-div">
-          Only first {INITIAL_LIMIT} games loaded.
+          Showing last {INITIAL_LIMIT} games.
           <Button variant="link" className="Games-loadall-button" onClick={() => setLimit(null)}>Load All...</Button>
         </div>
       )}
