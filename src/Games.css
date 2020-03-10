@@ -49,3 +49,16 @@
   padding-left: 0.5rem;
   vertical-align: baseline;
 }
+
+.Games-loadall-div {
+  margin-top: 1rem;
+  font-weight: em;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.Games-loadall-button {
+  padding: 0px;
+  margin-left: 0.5rem;
+  vertical-align: baseline;
+}

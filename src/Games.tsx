@@ -12,6 +12,8 @@ import { GameConverter, Game, calcGameGroups } from './models';
 import NewGame from './NewGame';
 import { GameGroup } from './GameGroup';
 
+const INITIAL_LIMIT=75;
+
 interface GamesProps {
   gamesRef: firebase.firestore.CollectionReference
 }
@@ -20,19 +22,22 @@ export default function Games(props: GamesProps) {
   const gamesRef = props.gamesRef;
   const [games, setGames] = useState([] as Game[]);
   const [deletingId, setDeletingId] = useState('');
+  const [limit, setLimit] = useState<number|null>(INITIAL_LIMIT);
 
   useEffect(() => {
-    const listener =
-        gamesRef
-          .withConverter(GameConverter)
-          .where('deleted', '==', false)
-          .orderBy('gameTime', 'desc')
-          .orderBy('createdAt', 'desc')
-          .onSnapshot(snapshot => {
+    let query = gamesRef
+        .withConverter(GameConverter)
+        .where('deleted', '==', false)
+        .orderBy('gameTime', 'desc')
+        .orderBy('createdAt', 'desc');
+    if (limit !== null) {
+      query = query.limit(limit);
+    }
+    const listener = query.onSnapshot(snapshot => {
       setGames(snapshot.docs.map(docSnap => docSnap.data()));
     });
     return listener;
-  }, [gamesRef]);
+  }, [gamesRef, limit]);
 
   function deleteGame(id: string) {
     gamesRef.doc(id).update({
@@ -50,8 +55,13 @@ export default function Games(props: GamesProps) {
     setDeletingId('');
   }
 
-  // TODO: Remove last group if we hit our limit.
-  const groups = calcGameGroups(games);
+  let groups = calcGameGroups(games);
+
+  const hitLimit = games.length === limit;
+  if (hitLimit) {
+    // The last group is likely incomplete so remove it.
+    groups.splice(groups.length - 1, 1);
+  }
 
   return (
     <div>
@@ -59,6 +69,12 @@ export default function Games(props: GamesProps) {
       {groups.map(group => (
         <GameGroup key={group.key} group={group} onDelete={(gameId) => setDeletingId(gameId)} />
       ))}
+      {hitLimit && (
+        <div className="Games-loadall-div">
+          Only first {INITIAL_LIMIT} games loaded.
+          <Button variant="link" className="Games-loadall-button" onClick={() => setLimit(null)}>Load All...</Button>
+        </div>
+      )}
       <Modal show={deletingId !== ''} onHide={handleDeleteCancel}>
         <Modal.Header closeButton>
           <Modal.Title>Delete Game?</Modal.Title>
