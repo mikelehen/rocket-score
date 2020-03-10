@@ -30,10 +30,10 @@
 .Games-game-win, .Games-game-loss {
   display: inline-block;
   text-align: center;
-  font-size: 1.5rem;
-  width: 2rem;
-  height: 2rem;
-  line-height: 2rem;;
+  font-size: 2rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  line-height: 2.5rem;;
 }
 
 .Games-game-win {
