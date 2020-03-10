@@ -27,7 +27,7 @@ export default function Games(props: GamesProps) {
           .where('deleted', '==', false)
           .orderBy('gameTime', 'desc')
           .orderBy('createdAt', 'desc')
-          .limit(50).onSnapshot(snapshot => {
+          .onSnapshot(snapshot => {
       setGames(snapshot.docs.map(docSnap => docSnap.data()));
     });
     return listener;
@@ -61,7 +61,7 @@ export default function Games(props: GamesProps) {
             {group.dateString}: <em>{group.teamMembers.join(', ')}</em> vs <em>{group.opponent}</em> ({group.teamSize}v{group.teamSize})
           </h4>
           Record: {calcRecord(group.games)}
-          <Table>
+          <Table size="sm">
             <tbody>
               {group.games.map(game => (
                 <tr key={game.id} className={game.win ? 'Games-row-win' : 'Games-row-loss' }>
