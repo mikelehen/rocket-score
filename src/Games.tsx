@@ -6,10 +6,11 @@ import * as firebase from 'firebase/app';
 import 'firebase/firestore';
 
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Modal } from 'react-bootstrap';
+import { Button, Modal } from 'react-bootstrap';
 
 import { GameConverter, Game, calcGameGroups } from './models';
 import NewGame from './NewGame';
+import { GameGroup } from './GameGroup';
 
 interface GamesProps {
   gamesRef: firebase.firestore.CollectionReference
@@ -18,7 +19,7 @@ interface GamesProps {
 export default function Games(props: GamesProps) {
   const gamesRef = props.gamesRef;
   const [games, setGames] = useState([] as Game[]);
-  const [deletingID, setDeletingID] = useState('');
+  const [deletingId, setDeletingId] = useState('');
 
   useEffect(() => {
     const listener =
@@ -41,12 +42,12 @@ export default function Games(props: GamesProps) {
   }
 
   function handleDeleteCancel() {
-    setDeletingID('');
+    setDeletingId('');
   }
 
   function handleDelete() {
-    deleteGame(deletingID);
-    setDeletingID('');
+    deleteGame(deletingId);
+    setDeletingId('');
   }
 
   // TODO: Remove last group if we hit our limit.
@@ -56,29 +57,9 @@ export default function Games(props: GamesProps) {
     <div>
       <NewGame gamesRef={props.gamesRef} />
       {groups.map(group => (
-        <div className="Games-group" key={group.key}>
-          <h4 className="Games-group-heading">
-            {group.dateString}: <em>{group.teamMembers.join(', ')}</em> vs <em>{group.opponent}</em> ({group.teamSize}v{group.teamSize})
-          </h4>
-          Record: {calcRecord(group.games)}
-          <Table size="sm">
-            <tbody>
-              {group.games.map(game => (
-                <tr key={game.id} className={game.win ? 'Games-row-win' : 'Games-row-loss' }>
-                  <td>{game.win ?
-                    (<span role='img' aria-label='Win'>&#x1f3c6;</span>) :
-                    (<span role='img' aria-label='Loss'>&#x1f62d;</span>)
-                  }
-                  </td>
-                  <td>{game.gameTime.toDate().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</td>
-                  <td><Button variant="link" className="Games-delete" size="sm" onClick={()=>setDeletingID(game.id!)}><span className="icon-bin2"></span></Button></td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </div>
+        <GameGroup key={group.key} group={group} onDelete={(gameId) => setDeletingId(gameId)} />
       ))}
-      <Modal show={deletingID !== ''} onHide={handleDeleteCancel}>
+      <Modal show={deletingId !== ''} onHide={handleDeleteCancel}>
         <Modal.Header closeButton>
           <Modal.Title>Delete Game?</Modal.Title>
         </Modal.Header>
@@ -95,21 +76,4 @@ export default function Games(props: GamesProps) {
 
     </div>
   );
-}
-
-function calcRecord(games: Game[]) {
-  let wins = 0, losses = 0;
-  for(const game of games) {
-    if (game.win) {
-      wins++;
-    } else {
-      losses++;
-    }
-  }
-
-  if ((wins + losses) > 0) {
-    return wins + ' - ' + losses + ' (' + (wins*100/(wins+losses)).toFixed() + '% win rate)';
-  } else {
-    return "0 - 0";
-  }
 }

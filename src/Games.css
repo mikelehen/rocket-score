@@ -26,3 +26,26 @@
 .Games-group-heading {
   border-bottom: 1px solid #e0e0e0;
 }
+
+.Games-game-win, .Games-game-loss {
+  display: inline-block;
+  text-align: center;
+  font-size: 1.5rem;
+  width: 2rem;
+  height: 2rem;
+  line-height: 2rem;;
+}
+
+.Games-game-win {
+  background-color: #d0ffd0;
+}
+
+.Games-game-loss {
+  background-color: #ffd0d0;
+}
+
+.Games-details-button {
+  padding: 0px;
+  padding-left: 0.5rem;
+  vertical-align: baseline;
+}
