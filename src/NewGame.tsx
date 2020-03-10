@@ -1,7 +1,7 @@
 import * as firebase from 'firebase/app';
 import 'firebase/firestore';
 import React, { useState, useEffect } from 'react';
-import { Form, Col, Button } from 'react-bootstrap';
+import { Form, Col, Button, Modal } from 'react-bootstrap';
 
 import './NewGame.css';
 import { GameConverter } from './models';
@@ -21,6 +21,7 @@ export default function NewGame(props: NewGameProps) {
   const [teamSize, setTeamSize] = useState(3);
   const [opponent, setOpponent] = useState("All Star");
   const [teamMembers, setTeamMembers] = useState(['Carl', 'Michael']);
+  const [recordMultipleModal, setRecordMultipleModal] = useState(false);
 
   useEffect(() => {
     gamesRef
@@ -83,48 +84,113 @@ export default function NewGame(props: NewGameProps) {
     }
   }
 
+  function onRecordMultipleClose(n: number, win: boolean) {
+    if (n > 0) {
+      for(let i = 0; i < n; i++) {
+        recordGame(win);
+      }
+    }
+    setRecordMultipleModal(false);
+  }
+
   return (
-    <Form className="NewGame-Form">
-      <Form.Row>
-        <Form.Group as={Col} sm="4">
-          <Form.Label>Game Date</Form.Label>
-          <Form.Control type="date" value={gameDate} onChange={onGameDateChange} />
-          <Form.Control.Feedback type="invalid">
-            Could not parse date.
-          </Form.Control.Feedback>
-        </Form.Group>
-        <Form.Group as={Col} sm="2">
-          <Form.Label>Team Size</Form.Label>
-          <Form.Control as="select" value={"" + teamSize} onChange={onTeamSizeChange}>
-            {TEAM_SIZES.map(size => (
-              <option key={size} value={size}>{size}v{size}</option>
-            ))}
-          </Form.Control>
-        </Form.Group>
-        <Form.Group as={Col} sm="2">
-          <Form.Label>Opponent</Form.Label>
-          <Form.Control as="select" value={opponent} onChange={onOpponentChange}>
-            {OPPONENTS.map(o => (
-              <option key={o}>{o}</option>
-            ))}
-          </Form.Control>
-        </Form.Group>
-        <Form.Group as={Col} sm="4">
-          <Form.Label>Team Members</Form.Label>
-          <div>
-            {TEAM_MEMBERS.map(member => (
-              <Form.Check key={member} id={"team-member-" + member} custom inline label={member} type="checkbox" checked={teamMembers.includes(member)} onChange={onTeamMemberClick.bind(null, member)}/>
-            ))}
-          </div>
-        </Form.Group>
-      </Form.Row>
-      <Button variant="danger" className="mr-2" onClick={recordLoss}>
-        Record Loss <span role="img" aria-label="Loudly Crying Face">&#x1f62d;</span>
-      </Button>
-      <Button variant="success" onClick={recordWin}>
-        Record Win <span role="img" aria-label="Trophy">&#x1f3c6;</span>
-      </Button>
-    </Form>
+    <div>
+      <RecordMultipleModal show={recordMultipleModal} gameDate={gameDate} opponent={opponent} teamSize={teamSize} teamMembers={teamMembers} onClose={onRecordMultipleClose} />
+      <Form className="NewGame-Form">
+        <Form.Row>
+          <Form.Group as={Col} sm="4">
+            <Form.Label>Game Date</Form.Label>
+            <Form.Control type="date" value={gameDate} onChange={onGameDateChange} />
+          </Form.Group>
+          <Form.Group as={Col} sm="2">
+            <Form.Label>Team Size</Form.Label>
+            <Form.Control as="select" value={"" + teamSize} onChange={onTeamSizeChange}>
+              {TEAM_SIZES.map(size => (
+                <option key={size} value={size}>{size}v{size}</option>
+              ))}
+            </Form.Control>
+          </Form.Group>
+          <Form.Group as={Col} sm="2">
+            <Form.Label>Opponent</Form.Label>
+            <Form.Control as="select" value={opponent} onChange={onOpponentChange}>
+              {OPPONENTS.map(o => (
+                <option key={o}>{o}</option>
+              ))}
+            </Form.Control>
+          </Form.Group>
+          <Form.Group as={Col} sm="4">
+            <Form.Label>Team Members</Form.Label>
+            <div>
+              {TEAM_MEMBERS.map(member => (
+                <Form.Check key={member} id={"team-member-" + member} custom inline label={member} type="checkbox" checked={teamMembers.includes(member)} onChange={onTeamMemberClick.bind(null, member)}/>
+              ))}
+            </div>
+          </Form.Group>
+        </Form.Row>
+        <Button variant="danger" className="mr-2" onClick={recordLoss}>
+          Record Loss <span role="img" aria-label="Loudly Crying Face">&#x1f62d;</span>
+        </Button>
+        <Button variant="success" onClick={recordWin}>
+          Record Win <span role="img" aria-label="Trophy">&#x1f3c6;</span>
+        </Button>
+        <Button variant="link" onClick={() => setRecordMultipleModal(true)}>
+          Record Multiple...
+        </Button>
+      </Form>
+    </div>
+  );
+}
+
+interface RecordMultipleModalProps {
+  show: boolean,
+  gameDate: string,
+  teamSize: number,
+  teamMembers: string[],
+  opponent: string,
+  onClose: (n: number, win: boolean) => void
+};
+
+function RecordMultipleModal(props: RecordMultipleModalProps) {
+  const [games, setGames] = useState('');
+
+  function onRecord(win: boolean) {
+    if ('' + parseInt(games) === games) {
+      props.onClose(parseInt(games), win);
+    }
+  }
+
+  function onClose() {
+    props.onClose(0, false);
+  }
+
+  function onGamesChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setGames(event.target.value);
+  }
+
+  return (
+    <Modal show={props.show} onHide={onClose}>
+      <Modal.Header closeButton>
+        <Modal.Title>Record Multiple Games...</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <p>{props.gameDate}: {props.teamMembers.join(', ')} vs {props.opponent} ({props.teamSize}v{props.teamSize})</p>
+        <Form>
+          <Form.Group>
+            <Form.Label>Games:</Form.Label>
+            <Form.Control type="text" onChange={onGamesChange}></Form.Control>
+          </Form.Group>
+        </Form>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="danger" className="mr-2" onClick={() => onRecord(false)}>
+          Record {games} Losses <span role="img" aria-label="Loudly Crying Face">&#x1f62d;</span>
+        </Button>
+        <Button variant="success" onClick={() => onRecord(true)}>
+          Record {games} Wins <span role="img" aria-label="Trophy">&#x1f3c6;</span>
+        </Button>
+        <Button variant="secondary" onClick={onClose}>Cancel</Button>
+      </Modal.Footer>
+    </Modal>
   );
 }
 

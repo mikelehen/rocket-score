@@ -26,6 +26,7 @@ export default function Games(props: GamesProps) {
           .withConverter(GameConverter)
           .where('deleted', '==', false)
           .orderBy('gameTime', 'desc')
+          .orderBy('createdAt', 'desc')
           .limit(50).onSnapshot(snapshot => {
       setGames(snapshot.docs.map(docSnap => docSnap.data()));
     });
