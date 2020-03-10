@@ -177,7 +177,7 @@ function RecordMultipleModal(props: RecordMultipleModalProps) {
         <Form>
           <Form.Group>
             <Form.Label>Games:</Form.Label>
-            <Form.Control type="text" onChange={onGamesChange}></Form.Control>
+            <Form.Control type="number" onChange={onGamesChange}></Form.Control>
           </Form.Group>
         </Form>
       </Modal.Body>
