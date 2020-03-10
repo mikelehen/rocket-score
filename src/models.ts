@@ -1,6 +1,6 @@
 import * as firebase from 'firebase/app';
 import 'firebase/firestore';
-import { scalarArrayEquals, assert } from './util';
+import { assert, primitiveCompare } from './util';
 
 export interface Game {
   gameTime: firebase.firestore.Timestamp,
@@ -42,58 +42,53 @@ export const GameConverter = {
 export class GameGroup {
   private readonly HOURS_BETWEEN_GROUPS = 1;
 
-  readonly firstGame: Date;
   readonly teamSize: number;
   readonly opponent: string;
   readonly teamMembers: string[];
   readonly key: string;
-  lastGame: Date;
   games: Game[];
 
   constructor(game: Game) {
-    this.firstGame = game.gameTime.toDate();
-    this.lastGame = game.gameTime.toDate();
     this.teamSize = game.teamSize;
     this.opponent = game.opponent;
     this.teamMembers = game.teamMembers;
-    this.key = `${this.firstGame}:${this.teamSize}:${this.opponent}:${this.teamMembers.join(',')}`;
+    this.key = gameKey(game);
 
     this.games = [game];
   }
 
-  tryAddGame(game: Game): boolean {
-    const gameTime = game.gameTime.toDate();
-    assert(gameTime >= this.lastGame, 'Games must be added in gameTime-order.');
-    let gameGroupEndTime = this.lastGame;
-    gameGroupEndTime.setHours(gameGroupEndTime.getHours() + this.HOURS_BETWEEN_GROUPS);
-    if (gameTime <= gameGroupEndTime &&
-        game.teamSize === this.teamSize &&
-        game.opponent === this.opponent &&
-        scalarArrayEquals(game.teamMembers.sort(), this.teamMembers.sort())) {
-      this.games.unshift(game);
-      this.lastGame = gameTime;
-      return true;
-    } else {
-      return false;
-    }
+  get dateString(): string {
+    return this.games[0].gameTime.toDate().toLocaleDateString();
+  }
+
+  addGame(game: Game): void {
+    assert(gameKey(game) === gameKey(this.games[0]), 'Invalid game added to group');
+    this.games.push(game);
   }
 }
 
 export function calcGameGroups(games: Game[]): GameGroup[] {
-  let groups = [] as GameGroup[];
-  // Games are expected to be in reverse-chronological order, but group.tryAddGame() requires
-  // they be added chronologically.
-  for (let i = games.length - 1; i >=0; i--) {
-    const game = games[i];
-    if (groups.length === 0) {
-      groups.push(new GameGroup(game));
+  let groups = { } as { [key: string]: GameGroup };
+  for (const game of games) {
+    const key = gameKey(game);
+    let group = groups[key];
+    if (!group) {
+      groups[key] = new GameGroup(game);
     } else {
-      const lastGroup = groups[groups.length - 1];
-      if (!lastGroup.tryAddGame(game)) {
-        groups.push(new GameGroup(game));
-      }
+      group.addGame(game);
     }
   }
-  // We want to return the groups in reverse-chronological order again.
-  return groups.reverse();
+  return Object.values(groups).sort((a, b) => {
+    // order groups by when the last game was (newest to oldest)
+    const lastGameComp = -primitiveCompare(a.games[0].gameTime, b.games[0].gameTime);
+    // For games played at the same time (common for historical data that doesn't have correct times),
+    // just use the gameKey.
+    return lastGameComp !== 0 ? lastGameComp : primitiveCompare(a.key, b.key);
+  });
+}
+
+function gameKey(game: Game): string {
+  // Technically the team members should always be in the same order, but don't rely on it.
+  const sortedTeamMembers = game.teamMembers.slice().sort();
+  return `${game.gameTime.toDate().toLocaleDateString()}:${game.teamSize}:${game.opponent}:${sortedTeamMembers.join(',')}`;
 }

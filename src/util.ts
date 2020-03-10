@@ -23,18 +23,12 @@ export function formatDate(date: Date) {
   return [year, month, day].join('-');
 }
 
-type Scalar = number|string;
-
-export function scalarArrayEquals(array1: Scalar[], array2: Scalar[]) {
-  if (array1.length !== array2.length) {
-    return false;
+export function primitiveCompare<T>(a: T, b: T) {
+  if (a > b) {
+    return 1;
+  } else if (a < b) {
+    return -1;
+  } else {
+    return 0;
   }
-
-  for(let i = 0; i < array1.length; i++) {
-    if (array1[i] !== array2[i]) {
-      return false;
-    }
-  }
-
-  return true;
 }

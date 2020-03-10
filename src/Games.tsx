@@ -57,7 +57,7 @@ export default function Games(props: GamesProps) {
       {groups.map(group => (
         <div className="Games-group" key={group.key}>
           <h4 className="Games-group-heading">
-            {group.firstGame.toLocaleDateString()}: <em>{group.teamMembers.join(', ')}</em> vs <em>{group.opponent}</em> ({group.teamSize}v{group.teamSize})
+            {group.dateString}: <em>{group.teamMembers.join(', ')}</em> vs <em>{group.opponent}</em> ({group.teamSize}v{group.teamSize})
           </h4>
           Record: {calcRecord(group.games)}
           <Table>
