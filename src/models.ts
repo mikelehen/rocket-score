@@ -40,8 +40,6 @@ export const GameConverter = {
 
 /** A group of related games (same time period and players, etc.) */
 export class GameGroup {
-  private readonly HOURS_BETWEEN_GROUPS = 1;
-
   readonly teamSize: number;
   readonly opponent: string;
   readonly teamMembers: string[];
