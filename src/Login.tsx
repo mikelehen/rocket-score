@@ -2,10 +2,15 @@ import React, { useState } from 'react';
 import firebase from 'firebase/app';
 import 'firebase/auth';
 import { Form, Button, Col, Row, Alert } from 'react-bootstrap';
+import { useLocation, useHistory } from 'react-router-dom';
 
 export default function Login() {
   const [password, setPassword] = useState('');
   const [alertText, setAlertText] = useState('');
+
+  const history = useHistory();
+  const location = useLocation<{from: { pathname: string } }>();
+  const from = location.state?.from || { pathname: '/' };
 
   function onPasswordChange(event: React.ChangeEvent<HTMLInputElement>) {
     setPassword(event.target.value);
@@ -14,6 +19,7 @@ export default function Login() {
   function login() {
     firebase.auth().signInWithEmailAndPassword(password + '@example.com', password).then(() => {
       console.log('Signed in!');
+      history.replace(from);
     }).catch(err => {
       setAlertText(err.toString());
     })

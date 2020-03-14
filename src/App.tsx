@@ -11,6 +11,8 @@ import {
   BrowserRouter as Router,
   Switch,
   Route,
+  Redirect,
+  RouteProps,
 } from 'react-router-dom';
 import { LinkContainer } from 'react-router-bootstrap';
 import { Navbar, Nav} from 'react-bootstrap';
@@ -32,14 +34,7 @@ firebase.initializeApp(firebaseConfig);
 firebase.firestore().enablePersistence();
 
 export default function App() {
-  const [user, setUser] = useState<firebase.User|null|undefined>(undefined);
-  const auth = firebase.auth();
-  useEffect(() => {
-    const listener = firebase.auth().onAuthStateChanged(u => {
-      setUser(u);
-    });
-    return listener;
-  }, [auth]);
+  const user = useUser(firebase.auth());
 
   return (
     <Router>
@@ -56,18 +51,56 @@ export default function App() {
           </Navbar.Collapse>
         </Navbar>
         <Switch>
-          <Route path="/" exact>
-            { (user === undefined) ? null :
-              (user === null) ? (
-              <Login />
-            ) : (
-              <Games gamesRef={firebase.firestore().collection('games')}></Games>
-            )}
+          <PrivateRoute path="/" exact>
+            <Games gamesRef={firebase.firestore().collection('games')}></Games>
+          </PrivateRoute>
+          <Route path="/login">
+            <Login />
           </Route>
         </Switch>
       </div>
     </Router>
   );
+}
+
+// A wrapper for <Route> that redirects to /login screen if you're not yet
+// authenticated.
+function PrivateRoute({ children, ...rest }: RouteProps) {
+  const user = useUser(firebase.auth());
+
+  return (
+    <Route
+      {...rest}
+      render={({ location }) => {
+        if (user === undefined) {
+          return null;
+        } else if (user === null) {
+          return (
+            <Redirect
+              to={{
+                pathname: "/login",
+                state: { from: location }
+              }}
+            />
+          );
+        } else {
+          return children;
+        }
+      }} />
+  );
+}
+
+function useUser(auth: firebase.auth.Auth): firebase.User|null|undefined {
+  const [user, setUser] = useState<firebase.User|null|undefined>(undefined);
+
+  useEffect(() => {
+    const listener = firebase.auth().onAuthStateChanged(u => {
+      setUser(u);
+    });
+    return listener;
+  }, [auth]);
+
+  return user;
 }
 
 function LoginLogoutButton(props: { user: firebase.User|null|undefined }) {
