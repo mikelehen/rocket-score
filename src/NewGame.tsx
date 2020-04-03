@@ -9,7 +9,7 @@ import { formatDate } from './util';
 
 const TEAM_SIZES = [2, 3, 4];
 const OPPONENTS = ['Rookie', 'Pro', 'All Star', 'Humans'];
-const TEAM_MEMBERS = ['Carl', 'Michael', 'Laurie'];
+const TEAM_MEMBERS = ['Carl', 'David', 'Michael', 'Laurie'];
 
 interface NewGameProps {
   gamesRef: firebase.firestore.CollectionReference
